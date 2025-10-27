@@ -82,6 +82,8 @@ ca_childcare
 
 # REVISED using comment
 
+# I simplified the join syntax by removing the unnecessary join_by() function. Since both datasets had the same column name, I used the more straightforward by = "county_fips_code" approach. This revision made the code cleaner and more efficient while maintaining the same functionality.
+
 ca_childcare <- counties %>% 
   filter(state_abbreviation == "CA") %>% 
   inner_join(childcare_costs, by = "county_fips_code")
@@ -104,9 +106,11 @@ bay_area_long <- bay_area_childcare %>%
 
 #REVISED to include contains()
 
+# I made the code more flexible by using contains() instead of listing each column name. This automatically finds all columns with "mc_" or "mfcc_" patterns, making the code easier to maintain if the dataset changes.
+
 bay_area_long <- bay_area_childcare %>%
   pivot_longer(
-    cols = contains(c("mc_", "mfcc_")),  # Any column containing these patterns
+    cols = contains(c("mc_", "mfcc_")),  
     names_to = "type_age",
     values_to = "median_price"
   )
@@ -132,6 +136,8 @@ ca_childcare %>%
 
 
 # REVISED
+
+# I fixed two issues in the code. First, I added .groups = "drop" to remove the grouping structure after summarizing. Second, I used names_prefix to create clearer column names that show these are median income values for each year, making the table easier to understand.
 
 income_comparison <- ca_childcare %>%
   filter(study_year %in% c(2008, 2018)) %>%
@@ -253,7 +259,11 @@ ca_childcare <- ca_childcare %>%
     "San Diego - Imperial" = c("Imperial", "San Diego")))
 ca_childcare
 
+
+
 # REVISED
+
+# I combined two separate mutate calls into one function. This makes the code more efficient and cleaner by performing both operations in one step instead of two.
 
 ca_childcare <- ca_childcare %>% 
   mutate(
@@ -349,6 +359,8 @@ miranda_info <- person %>%
 
 # REVISED to include right_join()
 
+#  I changed from left_join() to right_join() to prioritize the interview data and only include people who have interview transcripts. I also filtered for non-missing transcripts to focus on individuals who actually provided statements.
+
 interview_with_people <- interview %>% 
   right_join(person, by = c("person_id" = "id")) %>% 
   filter(!is.na(transcript))
@@ -407,6 +419,7 @@ ca_childcare
 
 
 # REVISED using comment
+# I simplified the join syntax by removing the unnecessary join_by() wrapper. Since both datasets shared the same column name, I used the simpler by = "county_fips_code" format instead.
 
 ca_childcare <- counties %>% 
   filter(state_abbreviation == "CA") %>% 
@@ -424,6 +437,9 @@ ca_childcare <- counties %>%
 # REVISED example
 
 # Lab 4 
+
+# I added a semi_join() example to filter counties dataset to only include rows that have matching childcare cost data, keeping just the counties columns. This is more efficient than an inner join when you only need data from the first table.
+
 counties_with_childcare <- counties %>% 
   semi_join(childcare_costs, by = "county_fips_code")
 ```
@@ -434,9 +450,12 @@ counties_with_childcare <- counties %>%
 #| label: wd-6-anti
 
 # I didn't use anti_join() in my original work
-# REVISED example using my labs
+# REVISED example
 
 # Lab 4
+
+# I added an anti_join() example to identify counties in the counties dataset that don't have matching records in the childcare costs data. This helps find missing data gaps in the dataset.
+
 counties_without_childcare <- counties %>% 
   anti_join(childcare_costs, by = "county_fips_code")
 ```
@@ -500,6 +519,9 @@ ca_childcare %>%
   slice_min(year_2018)
 
 # REVISED
+
+#  I simplified the code by using == instead of %in%, removed the unnecessary study_year grouping since we're only looking at 2018, and replaced the arrange/slice combination with a single slice_min() call to directly find the region with the lowest price.
+
 ca_childcare %>%
   filter(study_year == 2018) %>%
   mutate(mc_infant = as.numeric(mc_infant)) %>% 
@@ -602,8 +624,7 @@ bay_area_long <- bay_area_childcare %>%
     pct_white_families = one_race_w / households
   )
 
-# Generate summary statistics table
-# Calculates cost statistics and demographic medians by group
+
 summary_table <- bay_area_long %>%
   group_by(age_group, childcare_type) %>%
   summarise(
@@ -647,6 +668,9 @@ teacher_evals_compare <- teacher_evals %>%
 # Lab 4 Q 2
 
 # REVISED to include function stops
+
+# I created a validation function that checks for required columns and stops execution with a clear error message if any are missing. This makes the code more robust by catching data issues early before further processing.
+
 validate_childcare_data <- function(data) {
   required_cols <- c("county_fips_code", "county_name", "state_abbreviation")
   missing_cols <- setdiff(required_cols, names(data))
@@ -1157,17 +1181,7 @@ bay_area_long %>%
 ```{r}
 #| label: pe-1-map-1
 
-# Lab 4
 
-# REVISED to include map() family
-
-variables_to_analyze <- c("mhi_2018", "total_pop", "households")
-
-ca_childcare %>%
-  group_by(region) %>%
-  summarise(across(all_of(variables_to_analyze), 
-                   ~ mean(., na.rm = TRUE), 
-                   .names = "mean_{.col}"))
 ```
 
 **PE-2: I can write functions to reduce repetition in my code.**
@@ -1318,9 +1332,9 @@ summary(reg_mod1)
 
 **Where have you revised your code?**
 
-I revised my code in several key areas throughout the course. In Lab 4, I received feedback that "Technically, you don't need to use join_by() if both datasets have the same column names. You can simply use by = 'county_fips_code'." This prompted me to simplify my join syntax from using `join_by(county_fips_code)` to the more straightforward `by = "county_fips_code"`.
+I revised my code in several key areas throughout the course. In Lab 4, I received feedback that "Technically, you don't need to use join_by() if both datasets have the same column names. You can simply use by = 'county_fips_code'." This prompted me to simplify my join syntax from using join_by(county_fips_code) to the more straightforward by = "county_fips_codes".
 
-Another significant revision came from feedback on Lab 4 Q5 where I was told: "Notice that your table still has a grouping variable! Because you grouped by two variables, your first group was not dropped! Can you give your column names better titles, so the reader knows what '2008' and '2018' represent?" This led me to add `.groups = "drop"` to my summarize function and use `names_prefix = "median_income_"` to create more descriptive column names.
+Another significant revision came from feedback on Lab 4 Q5 where I was told: "Notice that your table still has a grouping variable! Because you grouped by two variables, your first group was not dropped! Can you give your column names better titles, so the reader knows what '2008' and '2018' represent?" This led me to add .groups = "drop" to my summarize function and use names_prefix = "median_income\_" to create more descriptive column names.
 
 In Challenge 2, I revised my ggplot2 code after realizing that my jitter points were obscuring the boxplots. I learned to reorder the layers so jitter points came before boxplots, making the visualization much clearer.
 
@@ -1332,7 +1346,7 @@ The revision process taught me to be more deliberate about data visualization la
 
 **How have you incorporated this knowledge into future assignments?**
 
-I've incorporated this knowledge by adopting a more minimalist approach to coding, using simpler syntax when it achieves the same result. In all subsequent joins, I've used the straightforward `by = "column_name"` approach unless complex joining conditions are necessary. I now consistently use `.groups = "drop"` in my summarize operations to avoid unexpected grouping behavior and always provide clear, descriptive names for my output columns.
+I've incorporated this knowledge by adopting a more minimalist approach to coding, using simpler syntax when it achieves the same result. In all subsequent joins, I've used the straightforward by = "column_name" approach unless complex joining conditions are necessary. I now consistently use .groups = "drop" in my summarize operations to avoid unexpected grouping behavior and always provide clear, descriptive names for my output columns.
 
 For visualizations, I'm now much more intentional about layer ordering and regularly use descriptive prefixes in pivot operations. I've also started building in more error checking and validation based on lessons learned from debugging earlier assignments.
 
