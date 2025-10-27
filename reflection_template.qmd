@@ -1103,6 +1103,7 @@ kable(summary_table, caption = "Median Weekly Childcare Costs and Household Dive
 # Challenge 4 
 
 # REVISED
+
 kable(summary_table, 
       caption = "Median Weekly Childcare Costs and Household Diversity in Bay Area Counties",
       col.names = c("Age Group", "Childcare Type", "Mean Cost", "Median Cost", 
@@ -1217,6 +1218,9 @@ bay_area_long %>%
 # Lab 4
 
 # REVISED to use across()
+
+# I used across() to efficiently calculate both mean and median statistics for multiple columns (median household income, total population, and households) in a single summarise operation. This replaces what would have required multiple separate summarise calls, making the code more concise and readable while automatically generating clear column names with the .names argument.
+
 ca_childcare %>%
   group_by(region) %>%
   summarise(across(c(mhi_2018, total_pop, households),
@@ -1246,6 +1250,16 @@ ca_childcare %>%
 ```{r}
 #| label: pe-4-1
 
+# Lab 4 Description of the Data
+
+# I use pivot_longer() 
+
+bay_area_long <- bay_area_childcare %>%
+  pivot_longer(
+    cols = contains(c("mc_", "mfcc_")),
+    names_to = "type_age", 
+    values_to = "median_price"
+  )
 ```
 
 -   I can connect a data wrangling pipeline into a `ggplot()`
@@ -1265,6 +1279,8 @@ labs(x = "Median Household Income (2018) in Dollars",
       y = " ",
       subtitle = "Median Weekly Price for Center-based Childcare for an Infant in California",
       title = "Relationship Between Median Household Income and Median Infant Childcare Cost")
+
+
 ```
 
 ## Data Simulation & Statisical Models
@@ -1298,6 +1314,15 @@ labs(x = "Median Household Income (2018) in Dollars",
 
 species_mod <- aov(weight ~ species, data = surveys)
 summary(species_mod)
+
+
+
+# REVISED
+
+# I simplified the code by removing the unnecessary object assignment (species_mod <-) and calling summary() directly on the ANOVA result. This makes the code more concise while still providing the same statistical output, following the feedback to focus on displaying results rather than storing intermediate objects.
+
+summary(aov(weight ~ species, data = surveys))
+
 ```
 
 -   Example 2
@@ -1312,6 +1337,12 @@ summary(species_mod)
 chi_square <- table(teacher_evals_compare$set_level,
               teacher_evals_compare$sen_level)
 chisq.test(chi_square)
+
+# REVISED
+
+# I simplified the code by removing the unnecessary intermediate contingency table and passing the vectors directly to chisq.test(). This makes the code more concise and efficient while producing the same statistical results, following the feedback to use the function's built-in capability to handle vector inputs.
+
+chisq.test(teacher_evals_compare$set_level, teacher_evals_compare$sen_level)
 ```
 
 -   Example 3
@@ -1320,6 +1351,7 @@ chisq.test(chi_square)
 #| label: dsm-2-3
 
 # Lab 4 Q 9 - Linear regression
+
 reg_mod1 <- lm(mc_infant ~ mhi_2018, ca_childcare)
 summary(reg_mod1)
 ```
@@ -1342,7 +1374,7 @@ In Challenge 2, I revised my ggplot2 code after realizing that my jitter points 
 
 Through revisions, I learned the importance of code simplicity and clarity. I discovered that sometimes the most straightforward approach is the best one, as with the join syntax. I also learned that small details like proper grouping management and descriptive naming can significantly impact how understandable and professional my code appears to others.
 
-The revision process taught me to be more deliberate about data visualization layer ordering and to always consider the reader's perspective when presenting results. I realized that code isn't just about getting the right answer—it's about creating work that is maintainable, understandable, and professional.
+The revision process taught me to be more deliberate about data visualization layer ordering and to always consider the reader's perspective when presenting results. I realized that code isn't just about getting the right answer, it's about creating work that is maintainable, understandable, and professional.
 
 **How have you incorporated this knowledge into future assignments?**
 
