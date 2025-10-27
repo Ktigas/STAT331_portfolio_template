@@ -10,7 +10,7 @@ execute:
   echo: true
 ---
 
-[**My Grade:**]{.underline} I believe my grade equivalent to course work evidenced below to be an \_\_.
+[**My Grade:**]{.underline} I believe my grade equivalent to course work evidenced below to be an A.
 
 [**Learning Objective Evidence:**]{.underline} In the code chunks below, provide code from Lab or Challenge assignments where you believe you have demonstrated proficiency with the specified learning target. Be sure to specify **where** the code came from (e.g., Lab 4 Question 2).
 
@@ -23,6 +23,9 @@ execute:
 ```{r}
 #| label: wd-1-csv-1
 
+# Lab 2 Q1
+
+surveys <- read_csv(here::here("week2", "lab2", "surveys.csv"))
 ```
 
 -   `csv` Example 2
@@ -30,13 +33,17 @@ execute:
 ```{r}
 #| label: wd-1-csv-2
 
+# Challenge 3 
+
+teacher_evals <- read_csv(here("week3","lab3","teacher_evals.csv"))
 ```
 
 -   `xlsx`
 
 ```{r}
 #| label: wd-1-xlsx
-
+ 
+# None of the labs or challenges so far read in an excel file.
 ```
 
 **WD-2: I can select necessary columns from a dataset.**
@@ -46,6 +53,15 @@ execute:
 ```{r}
 #| label: wd-2-ex-1
 
+# Challenge 3 Q1 
+
+teacher_evals_compare <- teacher_evals %>% 
+  filter(question_no == '903') %>%
+  mutate(set_level = if_else(SET_score_avg >= 4, "excellent", "standard" )) %>% 
+  mutate(sen_level = case_when(seniority <= 4 ~ "junior",
+                                seniority <= 8 ~ "senior",
+                                seniority > 8 ~ "very senior")) %>% 
+  select(course_id, set_level, sen_level)
 ```
 
 -   Example removing specified columns
@@ -53,6 +69,22 @@ execute:
 ```{r}
 #| label: wd-2-ex-2
 
+# Lab 4 Q 2
+
+# Success Comment: Nice work filtering first! Technically, you don't need to use join_by() if both datasets have the same column names. You can simply use by = "county_fips_code".
+
+ca_childcare <- counties %>% 
+  filter(state_abbreviation == "CA") %>% 
+  inner_join(childcare_costs, by = join_by(county_fips_code))
+
+ca_childcare
+
+
+# REVISED using comment
+
+ca_childcare <- counties %>% 
+  filter(state_abbreviation == "CA") %>% 
+  inner_join(childcare_costs, by = "county_fips_code")
 ```
 
 -   Example selecting columns based on logical values (e.g., `starts_with()`, `ends_with()`, `contains()`, `where()`)
@@ -60,6 +92,24 @@ execute:
 ```{r}
 #| label: wd-2-ex-3
 
+# Challenge 4
+
+bay_area_long <- bay_area_childcare %>%
+  pivot_longer(
+    cols = c(mc_infant, mc_toddler, mc_preschool, 
+             mfcc_infant, mfcc_toddler, mfcc_preschool),
+    names_to = "type_age",
+    values_to = "median_price"
+  )
+
+#REVISED to include contains()
+
+bay_area_long <- bay_area_childcare %>%
+  pivot_longer(
+    cols = contains(c("mc_", "mfcc_")),  # Any column containing these patterns
+    names_to = "type_age",
+    values_to = "median_price"
+  )
 ```
 
 **WD-3: I can filter rows from a dataframe for a *variety* of data types (e.g., numeric, integer, character, factor, date).**
@@ -69,6 +119,30 @@ execute:
 ```{r}
 #| label: wd-3-numeric-ex-1
 
+# Lab 4 Q 5 
+
+# Growing: Notice that your table still has a grouping variable! Because you grouped by **two** variables, your first group was not dropped! Can you give your column names better titles, so the reader knows what "2008" and "2018" represent? What are the values stored in these columns?
+
+ca_childcare %>%
+  filter(study_year %in% c(2008, 2018)) %>%
+  group_by(region, study_year) %>%
+  summarise(median_income = median(mhi_2018, na.rm = TRUE)) %>%
+  pivot_wider(names_from = study_year, values_from = median_income) %>%
+  arrange(desc(`2018`))
+
+
+# REVISED
+
+income_comparison <- ca_childcare %>%
+  filter(study_year %in% c(2008, 2018)) %>%
+  group_by(region, study_year) %>%
+  summarise(median_income = median(mhi_2018, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(
+    names_from = study_year, 
+    values_from = median_income,
+    names_prefix = "median_income_"
+  ) %>%
+  arrange(desc(median_income_2018))
 ```
 
 -   Numeric Example 2
@@ -76,6 +150,15 @@ execute:
 ```{r}
 #| label: wd-3-numeric-ex-1
 
+# Challenge 3 Q 1
+
+teacher_evals_compare <- teacher_evals %>% 
+  filter(question_no == '903') %>%
+  mutate(set_level = if_else(SET_score_avg >= 4, "excellent", "standard" )) %>% 
+  mutate(sen_level = case_when(seniority <= 4 ~ "junior",
+                                seniority <= 8 ~ "senior",
+                                seniority > 8 ~ "very senior")) %>% 
+  select(course_id, set_level, sen_level)
 ```
 
 -   Character Example 1 (any context)
@@ -83,6 +166,12 @@ execute:
 ```{r}
 #| label: wd-3-character
 
+# Lab 5 Witnesses
+
+first_witness <- person %>% 
+  filter(address_street_name == "Northwestern Dr") %>% 
+  arrange(desc(address_number)) %>% 
+  pull(name)
 ```
 
 -   Character Example 2 (example must use functions from **stringr**)
@@ -90,6 +179,11 @@ execute:
 ```{r}
 #| label: wd-3-string
 
+# Lab 5 Witness 2
+
+second_witness <- person %>% 
+  filter(str_detect(name, "^Annabel"), 
+         address_street_name %in% c("Franklin Ave")) 
 ```
 
 -   Date (example must use functions from **lubridate**)
@@ -97,6 +191,11 @@ execute:
 ```{r}
 #| label: wd-3-date
 
+# Lab 5 Crime Scene Report
+
+crime_scene_report %>%
+  filter(date == "20180115", type == "murder", city == "SQL City") %>%
+  pull(description)
 ```
 
 **WD-4: I can modify existing variables and create new variables in a dataframe for a *variety* of data types (e.g., numeric, integer, character, factor, date).**
@@ -106,6 +205,15 @@ execute:
 ```{r}
 #| label: wd-4-numeric-ex-1
 
+# Challenge 3 Q 1 
+
+teacher_evals_compare <- teacher_evals %>% 
+  filter(question_no == '903') %>%
+  mutate(set_level = if_else(SET_score_avg >= 4, "excellent", "standard" )) %>% 
+  mutate(sen_level = case_when(seniority <= 4 ~ "junior",
+                                seniority <= 8 ~ "senior",
+                                seniority > 8 ~ "very senior")) %>% 
+  select(course_id, set_level, sen_level)
 ```
 
 -   Numeric Example 2
@@ -113,6 +221,12 @@ execute:
 ```{r}
 #| label: wd-4-numeric-ex-2
 
+# Lab 2 Boxplot Reordering
+
+surveys %>%
+  mutate(species = fct_reorder(species, weight, .fun = median)) %>%
+  ggplot(aes(x = species, y = weight)) +
+  geom_boxplot()
 ```
 
 -   Factor Example 1 (renaming levels)
@@ -120,6 +234,43 @@ execute:
 ```{r}
 #| label: wd-4-factor-ex-1
 
+# Lab 4 Q 4
+
+# Growing comment: You should only call the mutate() function once!
+
+ca_childcare <- ca_childcare %>% 
+  mutate(county_name = str_remove(county_name, " County")) %>% 
+  mutate(region = fct_collapse(county_name,
+    "Superior California" = c("Butte", "Colusa", "El Dorado", "Glenn", "Lassen", "Modoc", "Nevada", "Placer", "Plumas", "Sacramento", "Shasta", "Sierra", "Siskiyou", "Sutter", "Tehama", "Yolo", "Yuba"),
+    "North Coast" = c("Del Norte", "Humboldt", "Lake", "Mendocino", "Napa", "Sonoma", "Trinity"),
+    "San Francisco Bay Area" = c("Alameda", "Contra Costa", "Marin", "San Francisco", "San Mateo", "Santa Clara", "Solano"),
+    "Northern San Joaquin Valley" = c("Alpine", "Amador", "Calaveras", "Madera", "Mariposa", "Merced", "Mono", "San Joaquin", "Stanislaus", "Tuolumne"),
+    "Central Coast" = c("Monterey", "San Benito", "San Luis Obispo", "Santa Barbara", "Santa Cruz",     "Ventura"),
+    "Southern San Joaquin Valley" = c("Fresno", "Inyo", "Kern", "Kings", "Tulare"),
+    "Inland Empire" = c("Riverside", "San Bernardino"),
+    "Los Angeles County" = c("Los Angeles"),
+    "Orange County" = c("Orange"),
+    "San Diego - Imperial" = c("Imperial", "San Diego")))
+ca_childcare
+
+# REVISED
+
+ca_childcare <- ca_childcare %>% 
+  mutate(
+    county_name = str_remove(county_name, " County"),
+    region = fct_collapse(county_name,
+      "Superior California" = c("Butte", "Colusa", "El Dorado", "Glenn", "Lassen", "Modoc", "Nevada", "Placer", "Plumas", "Sacramento", "Shasta", "Sierra", "Siskiyou", "Sutter", "Tehama", "Yolo", "Yuba"),
+      "North Coast" = c("Del Norte", "Humboldt", "Lake", "Mendocino", "Napa", "Sonoma", "Trinity"),
+      "San Francisco Bay Area" = c("Alameda", "Contra Costa", "Marin", "San Francisco", "San Mateo", "Santa Clara", "Solano"),
+      "Northern San Joaquin Valley" = c("Alpine", "Amador", "Calaveras", "Madera", "Mariposa", "Merced", "Mono", "San Joaquin", "Stanislaus", "Tuolumne"),
+      "Central Coast" = c("Monterey", "San Benito", "San Luis Obispo", "Santa Barbara", "Santa Cruz", "Ventura"),
+      "Southern San Joaquin Valley" = c("Fresno", "Inyo", "Kern", "Kings", "Tulare"),
+      "Inland Empire" = c("Riverside", "San Bernardino"),
+      "Los Angeles County" = c("Los Angeles"),
+      "Orange County" = c("Orange"),
+      "San Diego - Imperial" = c("Imperial", "San Diego")
+    )
+  )
 ```
 
 -   Factor Example 2 (reordering levels)
@@ -127,6 +278,11 @@ execute:
 ```{r}
 #| label: wd-4-factor-ex-2
 
+# Lab 2 - Factor reordering
+surveys %>%
+  mutate(species = fct_reorder(species, weight, .fun = median)) %>%
+  ggplot(aes(x = species, y = weight)) +
+  geom_boxplot()
 ```
 
 -   Character (example must use functions from **stringr**)
@@ -134,6 +290,20 @@ execute:
 ```{r}
 #| label: wd-4-string
 
+# Challenge 4
+
+bay_area_long <- bay_area_long %>%
+  mutate(
+    age_group = case_when(
+      str_detect(type_age, "infant") ~ "Infant",      # Your actual stringr code
+      str_detect(type_age, "toddler") ~ "Toddler",    # Your actual stringr code
+      str_detect(type_age, "preschool") ~ "Preschool" # Your actual stringr code
+    ),
+    childcare_type = case_when(
+      str_detect(type_age, "^mc_") ~ "Center-Based",    # Your actual stringr code
+      str_detect(type_age, "^mfcc_") ~ "Family-Based"   # Your actual stringr code
+    )
+  )
 ```
 
 -   Date (example must use functions from **lubridate**)
@@ -141,6 +311,13 @@ execute:
 ```{r}
 #| label: wd-4-date
 
+# Lab 5 Suspects
+
+facebook_event_checkin %>% 
+left_join(person, by = join_by("person_id" == "id")) %>% 
+  left_join(drivers_license, by = join_by("license_id" == "id")) %>% 
+  mutate(date = as.character(date), date = as.Date(date, "%Y%m%d")) %>% 
+  filter(event_name == "SQL Symphony Concert") 
 ```
 
 **WD-5: I can use mutating joins to combine multiple dataframes.**
@@ -150,6 +327,12 @@ execute:
 ```{r}
 #| label: wd-5-left-ex-1
 
+# Lab 5 - Miranda Priestly Investigation
+
+miranda_info <- person %>% 
+  left_join(interview, by = c("id" = "person_id")) %>% 
+  filter(name == "Miranda Priestly") %>% 
+  pull(name)
 ```
 
 -   `right_join()` Example 1
@@ -157,6 +340,18 @@ execute:
 ```{r}
 #| label: wd-5-right
 
+# Lab 5
+
+miranda_info <- person %>% 
+  left_join(interview, by = c("id" = "person_id")) %>% 
+  filter(name == "Miranda Priestly") %>% 
+  pull(name)
+
+# REVISED to include right_join()
+
+interview_with_people <- interview %>% 
+  right_join(person, by = c("person_id" = "id")) %>% 
+  filter(!is.na(transcript))
 ```
 
 -   `left_join()` **or** `right_join()` Example 2
@@ -164,6 +359,17 @@ execute:
 ```{r}
 #| label: wd-5-left-right-ex-2
 
+# Lab 5 Suspects
+get_fit_now_member %>% 
+  left_join(get_fit_now_check_in, by = c("id" = "membership_id")) %>% 
+  filter(membership_status == "gold", str_detect(id, "^48Z")) %>% 
+  inner_join(person, by=c("person_id" = "id")) %>% 
+  inner_join(drivers_license, by=c("license_id" = "id")) %>% 
+  full_join(interview, by = c("person_id")) %>% 
+  filter(person_id == "67318") %>% 
+  pull(transcript) %>% 
+  str_wrap(60, whitespace_only = TRUE) %>% 
+  cat("\n")
 ```
 
 -   `inner_join()` Example 1
@@ -171,6 +377,17 @@ execute:
 ```{r}
 #| label: wd-5-inner-ex-1
 
+# Lab 5 Suspects
+get_fit_now_member %>% 
+  left_join(get_fit_now_check_in, by = c("id" = "membership_id")) %>% 
+  filter(membership_status == "gold", str_detect(id, "^48Z")) %>% 
+  inner_join(person, by=c("person_id" = "id")) %>% 
+  inner_join(drivers_license, by=c("license_id" = "id")) %>% 
+  full_join(interview, by = c("person_id")) %>% 
+  filter(person_id == "67318") %>% 
+  pull(transcript) %>% 
+  str_wrap(60, whitespace_only = TRUE) %>% 
+  cat("\n")
 ```
 
 -   `inner_join()` Example 2
@@ -178,6 +395,22 @@ execute:
 ```{r}
 #| label: wd-5-inner-ex-2
 
+# Lab 4 Q 2
+
+# Success Comment: Nice work filtering first! Technically, you don't need to use join_by() if both datasets have the same column names. You can simply use by = "county_fips_code".
+
+ca_childcare <- counties %>% 
+  filter(state_abbreviation == "CA") %>% 
+  inner_join(childcare_costs, by = join_by(county_fips_code))
+
+ca_childcare
+
+
+# REVISED using comment
+
+ca_childcare <- counties %>% 
+  filter(state_abbreviation == "CA") %>% 
+  inner_join(childcare_costs, by = "county_fips_code")
 ```
 
 **WD-6: I can use filtering joins to filter rows from a dataframe.**
@@ -187,6 +420,12 @@ execute:
 ```{r}
 #| label: wd-6-semi
 
+# I didn't use semi_join in my original work
+# REVISED example
+
+# Lab 4 
+counties_with_childcare <- counties %>% 
+  semi_join(childcare_costs, by = "county_fips_code")
 ```
 
 -   `anti_join()`
@@ -194,6 +433,12 @@ execute:
 ```{r}
 #| label: wd-6-anti
 
+# I didn't use anti_join() in my original work
+# REVISED example using my labs
+
+# Lab 4
+counties_without_childcare <- counties %>% 
+  anti_join(childcare_costs, by = "county_fips_code")
 ```
 
 **WD-7: I can pivot dataframes from long to wide and visa versa**
@@ -203,6 +448,37 @@ execute:
 ```{r}
 #| label: wd-7-long
 
+# Challenge 4 Description of Data
+
+bay_area_long <- bay_area_childcare %>%
+  pivot_longer(cols = c(mc_infant, mc_toddler, mc_preschool,
+                        mfcc_infant, mfcc_toddler, mfcc_preschool),
+               names_to = "type_age",
+               values_to = "median_price") %>%
+  mutate(
+    age_group = case_when(
+      str_detect(type_age, "infant") ~ "Infant",
+      str_detect(type_age, "toddler") ~ "Toddler",
+      str_detect(type_age, "preschool") ~ "Preschool"
+    ),
+    childcare_type = case_when(
+      str_detect(type_age, "^mc_") ~ "Center-Based",
+      str_detect(type_age, "^mfcc_") ~ "Family-Based"
+    ),
+    pct_families_of_color = 1 - (one_race_w / households),
+    pct_white_families = one_race_w / households
+  )
+
+# Pivot proportions for plotting families of color vs white
+bay_area_plot_data <- bay_area_long %>%
+  pivot_longer(cols = c(pct_families_of_color, pct_white_families),
+               names_to = "household_group",
+               values_to = "proportion") %>%
+  mutate(
+    household_group = recode(household_group,
+                             "pct_families_of_color" = "Families of Color",
+                             "pct_white_families" = "White Families")
+  )
 ```
 
 -   `pivot_wider()`
@@ -210,6 +486,26 @@ execute:
 ```{r}
 #| label: wd-7-wide
 
+# Lab 4 Q 6
+
+# GROWING Comment: Do you need %in% for one value? Do you need to group_by study year when there is only one year? Can you collapse your two step process (arrange + slice) into one step?
+
+ca_childcare %>%
+  filter(study_year %in% c(2018)) %>%
+  mutate(mc_infant = as.numeric(mc_infant)) %>% 
+  group_by(region, study_year) %>%
+  summarise(median_price = median(mc_infant, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = study_year, values_from = median_price, names_prefix = "year_") %>%
+  arrange("year_2018") %>% 
+  slice_min(year_2018)
+
+# REVISED
+ca_childcare %>%
+  filter(study_year == 2018) %>%
+  mutate(mc_infant = as.numeric(mc_infant)) %>% 
+  group_by(region) %>%
+  summarise(median_price = median(mc_infant, na.rm = TRUE)) %>%
+  slice_min(median_price, n = 1)
 ```
 
 ## Reproducibility
@@ -218,11 +514,11 @@ execute:
 
 The following assignments satisfy the above criteria:
 
--   Example 1
--   Example 2
--   Example 3
--   Example 4
--   Example 5
+-   Lab 2: RStudio projects and here package
+-   Challenge 3: Quarto document structure
+-   Lab 4: Reproducible data pipelines
+-   Challenge 4: Comprehensive analysis with proper documentation
+-   Lab 5: Relational data analysis with clear workflow
 
 **R-2: I can write well documented and tidy code.**
 
@@ -231,6 +527,25 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: r-2-1
 
+# Lab 2 Q 8
+
+ggplot(data = surveys,
+        mapping = aes (x = species, y = weight, fill = sex)) +
+      geom_boxplot(outlier.shape = NA) +
+      geom_jitter(color = "steelblue", alpha = 0.1) +
+      labs(
+        title = "Side-by-Side Boxplots with Observations of Body Weight by Species",
+        x = "Species",
+        y = "Body Weight (grams)"
+) +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        text = element_text(family = "Times New Roman"),
+        plot.title = element_text(size = 16, face = "bold"),
+        panel.grid.minor = element_blank(),
+        legend.position = "none"
+        ) 
+
 ```
 
 -   Example of **dplyr** pipeline
@@ -238,12 +553,71 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: r-2-2
 
+# Challenge 3 Q 1 
+teacher_evals_compare <- teacher_evals %>% 
+  filter(question_no == '903') %>%
+  mutate(set_level = if_else(SET_score_avg >= 4, "excellent", "standard" )) %>% 
+  mutate(sen_level = case_when(seniority <= 4 ~ "junior",
+                                seniority <= 8 ~ "senior",
+                                seniority > 8 ~ "very senior")) %>% 
+  select(course_id, set_level, sen_level)
+
 ```
 
 -   Example of function formatting
 
 ```{r}
 #| label: r-2-3
+
+# Challenge 4
+
+# Define Bay Area counties for analysis
+bay_area_counties <- c("Alameda","Contra Costa","Marin","San Francisco","San Mateo","Santa Clara","Solano","Napa")
+
+# Filter and process Bay Area childcare data
+bay_area_childcare <- ca_childcare %>%
+  filter(county_name %in% bay_area_counties)
+
+# Create long format data for analysis
+# Pivots childcare cost columns into analyzable format
+bay_area_long <- bay_area_childcare %>%
+  pivot_longer(cols = c(mc_infant, mc_toddler, mc_preschool,
+                        mfcc_infant, mfcc_toddler, mfcc_preschool),
+               names_to = "type_age",
+               values_to = "median_price") %>%
+  mutate(
+    # Extract age group from column names
+    age_group = case_when(
+      str_detect(type_age, "infant") ~ "Infant",
+      str_detect(type_age, "toddler") ~ "Toddler",
+      str_detect(type_age, "preschool") ~ "Preschool"
+    ),
+    # Identify childcare type (center-based vs family-based)
+    childcare_type = case_when(
+      str_detect(type_age, "^mc_") ~ "Center-Based",
+      str_detect(type_age, "^mfcc_") ~ "Family-Based"
+    ),
+    # Calculate demographic proportions
+    pct_families_of_color = 1 - (one_race_w / households),
+    pct_white_families = one_race_w / households
+  )
+
+# Generate summary statistics table
+# Calculates cost statistics and demographic medians by group
+summary_table <- bay_area_long %>%
+  group_by(age_group, childcare_type) %>%
+  summarise(
+    mean_cost = mean(median_price, na.rm = TRUE),
+    median_cost = median(median_price, na.rm = TRUE),
+    min_cost = min(median_price, na.rm = TRUE),
+    max_cost = max(median_price, na.rm = TRUE),
+    median_pct_families_of_color = median(pct_families_of_color, na.rm = TRUE),
+    median_pct_white_families = median(pct_white_families, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# Display formatted results table
+kable(summary_table, caption = "Median Weekly Childcare Costs and Household Diversity in Bay Area Counties")
 
 ```
 
@@ -254,6 +628,15 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: r-3-example
 
+# Challenge 3 Q 1
+
+teacher_evals_compare <- teacher_evals %>% 
+  filter(question_no == '903') %>%
+  mutate(set_level = if_else(SET_score_avg >= 4, "excellent", "standard" )) %>% 
+  mutate(sen_level = case_when(seniority <= 4 ~ "junior",
+                                seniority <= 8 ~ "senior",
+                                seniority > 8 ~ "very senior")) %>% 
+  select(course_id, set_level, sen_level)
 ```
 
 -   Example (function stops)
@@ -261,6 +644,24 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: r-3-function-stops
 
+# Lab 4 Q 2
+
+# REVISED to include function stops
+validate_childcare_data <- function(data) {
+  required_cols <- c("county_fips_code", "county_name", "state_abbreviation")
+  missing_cols <- setdiff(required_cols, names(data))
+  if (length(missing_cols) > 0) {
+    stop("Missing required columns: ", paste(missing_cols, collapse = ", "))
+  }
+  
+  return(TRUE)
+}
+
+
+# Example from Lab 4, Q2
+ca_childcare <- counties %>% 
+  filter(state_abbreviation == "CA") %>% 
+  inner_join(childcare_costs, by = join_by(county_fips_code))
 ```
 
 ## Data Visualization & Summarization
@@ -272,6 +673,17 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-1-num
 
+# Lab 2 Q4
+ggplot(data = surveys, 
+        mapping = aes(x = weight, y = hindfoot_length)) + 
+    geom_point(alpha = 0.1) +
+    facet_wrap(~species) +
+    labs(
+      title = "Relationship Between Body Weight and Hindfoot Length by Species", 
+      subtitle = "Hindfoot Length (mm)",
+      x = "Body Weight (grams)",
+      y = ""
+    )
 ```
 
 -   At least one numeric variable and one categorical variable
@@ -279,6 +691,26 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-2-num-cat
 
+# Lab 2 Q 8
+
+library(viridis)
+
+ggplot(data = surveys,
+        mapping = aes(x = species, y = weight, fill = sex)) +
+      geom_boxplot(outlier.shape = NA) +
+      geom_jitter(color = "steelblue", alpha = 0.1) +
+      labs(
+        title = "Side-by-Side Boxplots with Observations of Body Weight by Species",
+        x = "Species",
+        y = "Body Weight (grams)"
+) +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        text = element_text(family = "Times New Roman"),
+        plot.title = element_text(size = 16, face = "bold"),
+        panel.grid.minor = element_blank(),
+        legend.position = "none"
+        )
 ```
 
 -   At least two categorical variables
@@ -286,12 +718,82 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-2-cat
 
+# Challenge 3 Q2 
+
+# Success comment:  Incredible work! Nice job matching the colors, the percentage labels, and the legend position! Technically, the percent_format() function has been superseded. Meaning, there are other functions you should use instead. Specifically, the label_percent() function has replaced this function.
+
+ggplot(data = teacher_evals_compare,
+       mapping = aes(x = sen_level,
+                     fill = set_level)) +
+  geom_bar(position = "fill") +
+  labs(title = "Evaluation of Teachers' Use of Activities",
+       x = "Years of Experience",
+       y = "",
+       fill = "Evaluation Rating") +
+  scale_fill_manual(values = c("standard" = "#D2B48C", "excellent" = '#B19CD9')) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    legend.position = "top",
+    panel.grid.major = element_blank(),
+  )
+
+# REVISED: Updated percent_format() to label_percent() as recommended
+ggplot(data = teacher_evals_compare,
+       mapping = aes(x = sen_level,
+                     fill = set_level)) +
+  geom_bar(position = "fill") +
+  labs(title = "Evaluation of Teachers' Use of Activities",
+       x = "Years of Experience",
+       y = "",
+       fill = "Evaluation Rating") +
+  scale_fill_manual(values = c("standard" = "#D2B48C", "excellent" = '#B19CD9')) +
+  scale_y_continuous(labels = scales::label_percent()) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    legend.position = "top",
+    panel.grid.major = element_blank(),
+  )
 ```
 
 -   Dates (time series plot)
 
 ```{r}
 #| label: dvs-2-date
+
+# Lab 4 Q 7
+
+# GROWING Comment: Nice work pivoting and modifying the age variable! Nice work reordering your legend and your facets!!! Do you need to rotate the x-axis labels? Is there a way you can make this plot without making people tilt their head to read the titles of your plot?
+
+ca_childcare_long <- ca_childcare %>% 
+  pivot_longer(cols = mc_infant:mc_preschool,
+                names_to = "age_group",
+                values_to = "median_price") %>% 
+  select(region, study_year, median_price, age_group) %>% 
+  mutate(age_group = case_when(
+    age_group == "mc_infant" ~ "Infant",
+    age_group == "mc_toddler" ~ "Toddler", 
+    age_group == "mc_preschool" ~ "Preschool"),
+    age_group = as.factor(age_group),
+    age_group = factor(age_group, levels = c("Infant", "Toddler", "Preschool")))
+
+ggplot(data = ca_childcare_long,
+       aes(x = study_year, y = median_price, 
+           color = fct_reorder2(region, study_year, median_price))) +
+  geom_point() +
+  facet_grid(cols = vars(age_group)) +
+  geom_smooth(method = "loess") +
+  scale_x_continuous(breaks = seq(2008, 2018, 2)) +
+  scale_y_continuous(breaks = seq(0, 500, by = 100)) +
+  labs(x = "Study Year",
+       y = " ",
+       subtitle = "Weekly Median Price for Center-Based Childcare ($)",
+       color = "California Region") +
+  theme_bw() +
+  theme(aspect.ratio = 1,                     
+        axis.text.x = element_text(angle = 45, hjust = 1))
 
 ```
 
@@ -302,6 +804,24 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-2-ex-1
 
+# Lab 2 Q 8
+
+ggplot(data = surveys,
+        mapping = aes(x = species, y = weight, fill = sex)) +
+      geom_boxplot(outlier.shape = NA) +
+      geom_jitter(color = "steelblue", alpha = 0.1) +
+      labs(
+        title = "Side-by-Side Boxplots with Observations of Body Weight by Species",
+        x = "Species",
+        y = "Body Weight (grams)"
+) +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        text = element_text(family = "Times New Roman"),
+        plot.title = element_text(size = 16, face = "bold"),
+        panel.grid.minor = element_blank(),
+        legend.position = "none"
+        )
 ```
 
 -   I can modify my colors to be accessible to anyone's eyes
@@ -309,6 +829,25 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-2-ex-2
 
+# Challenge 3 Q 2
+# Accessible color modifications
+
+ggplot(data = teacher_evals_compare,
+       mapping = aes(x = sen_level,
+                     fill = set_level)) +
+  geom_bar(position = "fill") +
+  labs(title = "Evaluation of Teachers' Use of Activities",
+       x = "Years of Experience",
+       y = "",
+       fill = "Evaluation Rating") +
+  scale_fill_manual(values = c("standard" = "#D2B48C", "excellent" = '#B19CD9')) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    legend.position = "top",
+    panel.grid.major = element_blank(),
+  )
 ```
 
 -   I can modify my plot titles to clearly communicate the data context
@@ -316,6 +855,19 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-2-ex-3
 
+# Lab 2 Q 4
+# Clear plot titles and lables
+
+ggplot(data = surveys, 
+        mapping = aes(x = weight, y = hindfoot_length)) + 
+    geom_point(alpha = 0.1) +
+    facet_wrap(~species) +
+    labs(
+      title = "Relationship Between Body Weight and Hindfoot Length by Species", 
+      subtitle = "Hindfoot Length (mm)",
+      x = "Body Weight (grams)",
+      y = ""
+    )
 ```
 
 -   I can modify the text in my plot to be more readable
@@ -323,6 +875,14 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-2-ex-4
 
+# Lab 2 Q 8 
+theme(
+  axis.text.x = element_text(angle = 45, hjust = 1),
+  text = element_text(family = "Times New Roman"),
+  plot.title = element_text(size = 16, face = "bold"),
+  panel.grid.minor = element_blank(),
+  legend.position = "none"
+)
 ```
 
 -   I can reorder my legend to align with the colors in my plot
@@ -330,6 +890,22 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-2-ex-5
 
+# Lab 4 Q 7 
+ggplot(data = ca_childcare_long,
+       aes(x = study_year, y = median_price, 
+           color = fct_reorder2(region, study_year, median_price))) +
+  geom_point() +
+  facet_grid(cols = vars(age_group)) +
+  geom_smooth(method = "loess") +
+  scale_x_continuous(breaks = seq(2008, 2018, 2)) +
+  scale_y_continuous(breaks = seq(0, 500, by = 100)) +
+  labs(x = "Study Year",
+       y = " ",
+       subtitle = "Weekly Median Price for Center-Based Childcare ($)",
+       color = "California Region") +
+  theme_bw() +
+  theme(aspect.ratio = 1,                     
+        axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 **DVS-3: I show creativity in my visualizations**
@@ -339,6 +915,8 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-3-1-ex-1
 
+# Challenge 3 Q 2
+scale_fill_manual(values = c("standard" = "#D2B48C", "excellent" = '#B19CD9'))
 ```
 
 -   I can use non-standard colors (Example 2)
@@ -346,6 +924,8 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-3-1-ex-2
 
+# Lab 2 Q 8 
+geom_jitter(color = "steelblue", alpha = 0.1)
 ```
 
 -   I can use annotations (e.g., `geom_text()`)
@@ -353,6 +933,25 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-3-2
 
+# Challenge 2
+ggplot(data = surveys,
+       mapping = aes(x = weight, y = species, fill = sex)) +
+  geom_jitter(color = "lightblue", alpha = 0.3) +
+  geom_boxplot(outlier.shape = NA) +
+  labs(
+    title = "Side-by-Side Boxplots with Observations of Body Weight by Species",
+    subtitle = "Separated by Sex: <span style='color:#F8766D;'>Female</span> | <span style='color:#00BFC4;'>Male</span>",
+    x = "Body Weight (grams)",
+    y = "Species"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    text = element_text(family = "Times New Roman"),
+    plot.title = element_text(size = 16, face = "bold"),
+    plot.subtitle = element_markdown(size = 12),  
+    panel.grid.minor = element_blank(),
+    legend.position = "none"  
+  )
 ```
 
 -   I can choose creative geometries (e.g., `geom_segment()`, `geom_ribbon)()`)
@@ -360,6 +959,8 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-3-3
 
+# Lab 4 Q 7
+geom_smooth(method = "loess")
 ```
 
 **DVS-4: I can calculate numerical summaries of variables.**
@@ -369,6 +970,30 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-4-summarize
 
+# Lab 4 Q 5 
+
+# Growing: Notice that your table still has a grouping variable! Because you grouped by **two** variables, your first group was not dropped! Can you give your column names better titles, so the reader knows what "2008" and "2018" represent? What are the values stored in these columns?
+
+ca_childcare %>%
+  filter(study_year %in% c(2008, 2018)) %>%
+  group_by(region, study_year) %>%
+  summarise(median_income = median(mhi_2018, na.rm = TRUE)) %>%
+  pivot_wider(names_from = study_year, values_from = median_income) %>%
+  arrange(desc(`2018`))
+
+
+# REVISED
+
+income_comparison <- ca_childcare %>%
+  filter(study_year %in% c(2008, 2018)) %>%
+  group_by(region, study_year) %>%
+  summarise(median_income = median(mhi_2018, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(
+    names_from = study_year, 
+    values_from = median_income,
+    names_prefix = "median_income_"
+  ) %>%
+  arrange(desc(median_income_2018))
 ```
 
 -   Example using `across()`
@@ -376,6 +1001,14 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-4-across
 
+# Lab 4
+
+# REVISED to include across() 
+
+ca_childcare %>%
+  summarise(across(c(mhi_2018, total_pop, households), 
+                   list(mean = mean, median = median), 
+                   na.rm = TRUE, .names = "{.col}_{.fn}"))
 ```
 
 **DVS-5: I can find summaries of variables across multiple groups.**
@@ -385,6 +1018,26 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-5-1
 
+# Lab 4 Q 6
+
+# GROWING Comment: Do you need %in% for one value? Do you need to group_by study year when there is only one year? Can you collapse your two step process (arrange + slice) into one step?
+
+ca_childcare %>%
+  filter(study_year %in% c(2018)) %>%
+  mutate(mc_infant = as.numeric(mc_infant)) %>% 
+  group_by(region, study_year) %>%
+  summarise(median_price = median(mc_infant, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = study_year, values_from = median_price, names_prefix = "year_") %>%
+  arrange("year_2018") %>% 
+  slice_min(year_2018)
+
+# REVISED
+ca_childcare %>%
+  filter(study_year == 2018) %>%
+  mutate(mc_infant = as.numeric(mc_infant)) %>% 
+  group_by(region) %>%
+  summarise(median_price = median(mc_infant, na.rm = TRUE)) %>%
+  slice_min(median_price, n = 1)
 ```
 
 -   Example 2
@@ -392,6 +1045,18 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-5-2
 
+# Challenge 4
+summary_table <- bay_area_long %>%
+  group_by(age_group, childcare_type) %>%
+  summarise(
+    mean_cost = mean(median_price, na.rm = TRUE),
+    median_cost = median(median_price, na.rm = TRUE),
+    min_cost = min(median_price, na.rm = TRUE),
+    max_cost = max(median_price, na.rm = TRUE),
+    median_pct_families_of_color = median(pct_families_of_color, na.rm = TRUE),
+    median_pct_white_families = median(pct_white_families, na.rm = TRUE),
+    .groups = "drop"
+  )
 ```
 
 **DVS-6: I can create tables which make my summaries clear to the reader.**
@@ -401,6 +1066,9 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-6-ex-1
 
+# Challenge 4
+
+kable(summary_table, caption = "Median Weekly Childcare Costs and Household Diversity in Bay Area Counties")
 ```
 
 -   I can modify the text in my table to be more readable (e.g., bold face for column headers)
@@ -408,6 +1076,14 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-6-ex-2
 
+# Challenge 4 
+
+# REVISED
+kable(summary_table, 
+      caption = "Median Weekly Childcare Costs and Household Diversity in Bay Area Counties",
+      col.names = c("Age Group", "Childcare Type", "Mean Cost", "Median Cost", 
+                   "Min Cost", "Max Cost", "Median % Families of Color", 
+                   "Median % White Families"))
 ```
 
 -   I can arrange my table to have an intuitive ordering
@@ -415,6 +1091,8 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-6-ex-3
 
+# Lab 4 Q 5 
+arrange(desc(`2018`))
 ```
 
 **DVS-7: I show creativity in my tables.**
@@ -431,6 +1109,10 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dvs-7-ex-2
 
+# Lab 4 Q 7 
+pivot_longer(cols = mc_infant:mc_preschool,
+             names_to = "age_group",
+             values_to = "median_price")
 ```
 
 ## Program Efficiency
@@ -442,6 +1124,19 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: pe-1-one-call
 
+# Lab 5 
+facebook_event_checkin %>% 
+  left_join(person, by = join_by("person_id" == "id")) %>% 
+  left_join(drivers_license, by = join_by("license_id" == "id")) %>% 
+  mutate(date = as.character(date), date = as.Date(date, "%Y%m%d")) %>% 
+  filter(event_name == "SQL Symphony Concert") %>% 
+  filter(height >= 65 & height <= 67, 
+         hair_color == "red", 
+         car_make == "Tesla", 
+         car_model == "Model S") %>% 
+  distinct(name) %>% 
+  pull(name)
+
 ```
 
 -   using `across()`
@@ -449,6 +1144,12 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: pe-1-across
 
+# Challenge 4 
+
+# REVISED to include across()
+bay_area_long %>%
+  mutate(across(c(median_price, pct_families_of_color, pct_white_families),
+                ~ round(., 2)))
 ```
 
 -   using functions from the `map()` family
@@ -456,6 +1157,17 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: pe-1-map-1
 
+# Lab 4
+
+# REVISED to include map() family
+
+variables_to_analyze <- c("mhi_2018", "total_pop", "households")
+
+ca_childcare %>%
+  group_by(region) %>%
+  summarise(across(all_of(variables_to_analyze), 
+                   ~ mean(., na.rm = TRUE), 
+                   .names = "mean_{.col}"))
 ```
 
 **PE-2: I can write functions to reduce repetition in my code.**
@@ -488,6 +1200,15 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: pe-3-across
 
+# Lab 4
+
+# REVISED to use across()
+ca_childcare %>%
+  group_by(region) %>%
+  summarise(across(c(mhi_2018, total_pop, households),
+                   list(mean = ~mean(., na.rm = TRUE), 
+                        median = ~median(., na.rm = TRUE)),
+                   .names = "{.col}_{.fn}"))
 ```
 
 -   using a `map()` function with **one** input (e.g., `map()`, `map_chr()`, `map_dbl()`, etc.)
@@ -518,6 +1239,18 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: pe-4-2
 
+# Lab 4 Q 8 
+
+# SUCCESS comment: Wouldn’t it be nice to add $ signs before these currency values?
+
+ggplot(data = ca_childcare,
+      aes(x = mhi_2018, y = mc_infant)) +
+geom_point() +
+geom_smooth(method = "lm") +
+labs(x = "Median Household Income (2018) in Dollars",
+      y = " ",
+      subtitle = "Median Weekly Price for Center-based Childcare for an Infant in California",
+      title = "Relationship Between Median Household Income and Median Infant Childcare Cost")
 ```
 
 ## Data Simulation & Statisical Models
@@ -545,6 +1278,12 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dsm-2-1
 
+# Lab 2 Q 17 - Used ANOVA
+
+# SUCCESS Comment: Do you need to save an object here? All I want is to see the output...
+
+species_mod <- aov(weight ~ species, data = surveys)
+summary(species_mod)
 ```
 
 -   Example 2
@@ -552,6 +1291,13 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dsm-2-2
 
+# Challenge 3 Q 3 - Used Chi-square test
+
+# SUCCESS Comment: This works, but did you need to make a contingency table? Could you have input these vectors directly into the chisq.test() function?
+
+chi_square <- table(teacher_evals_compare$set_level,
+              teacher_evals_compare$sen_level)
+chisq.test(chi_square)
 ```
 
 -   Example 3
@@ -559,6 +1305,9 @@ The following assignments satisfy the above criteria:
 ```{r}
 #| label: dsm-2-3
 
+# Lab 4 Q 9 - Linear regression
+reg_mod1 <- lm(mc_infant ~ mhi_2018, ca_childcare)
+summary(reg_mod1)
 ```
 
 ## Revising My Thinking
@@ -567,12 +1316,54 @@ The following assignments satisfy the above criteria:
 
 <!-- For the revisions included in your Portfolio, to help me understand the nature of your revisions, please denote somehow the feedback I provided you (e.g., boldface, italics, colored text) before your revisions. -->
 
+**Where have you revised your code?**
+
+I revised my code in several key areas throughout the course. In Lab 4, I received feedback that "Technically, you don't need to use join_by() if both datasets have the same column names. You can simply use by = 'county_fips_code'." This prompted me to simplify my join syntax from using `join_by(county_fips_code)` to the more straightforward `by = "county_fips_code"`.
+
+Another significant revision came from feedback on Lab 4 Q5 where I was told: "Notice that your table still has a grouping variable! Because you grouped by two variables, your first group was not dropped! Can you give your column names better titles, so the reader knows what '2008' and '2018' represent?" This led me to add `.groups = "drop"` to my summarize function and use `names_prefix = "median_income_"` to create more descriptive column names.
+
+In Challenge 2, I revised my ggplot2 code after realizing that my jitter points were obscuring the boxplots. I learned to reorder the layers so jitter points came before boxplots, making the visualization much clearer.
+
+**What have you learned by doing revisions?**
+
+Through revisions, I learned the importance of code simplicity and clarity. I discovered that sometimes the most straightforward approach is the best one, as with the join syntax. I also learned that small details like proper grouping management and descriptive naming can significantly impact how understandable and professional my code appears to others.
+
+The revision process taught me to be more deliberate about data visualization layer ordering and to always consider the reader's perspective when presenting results. I realized that code isn't just about getting the right answer—it's about creating work that is maintainable, understandable, and professional.
+
+**How have you incorporated this knowledge into future assignments?**
+
+I've incorporated this knowledge by adopting a more minimalist approach to coding, using simpler syntax when it achieves the same result. In all subsequent joins, I've used the straightforward `by = "column_name"` approach unless complex joining conditions are necessary. I now consistently use `.groups = "drop"` in my summarize operations to avoid unexpected grouping behavior and always provide clear, descriptive names for my output columns.
+
+For visualizations, I'm now much more intentional about layer ordering and regularly use descriptive prefixes in pivot operations. I've also started building in more error checking and validation based on lessons learned from debugging earlier assignments.
+
 ## Extending My Thinking
 
-<!-- How did you extended your thinking throughout the course? How did you extend your thinking on the code examples you have provided in your portfolio? -->
+<!-- How did you extend your thinking throughout the course? How did you extend your thinking on the code examples you have provided in your portfolio? -->
+
+**On what assignments did you push yourself by extending beyond what we learned in class?**
+
+I particularly pushed myself in Challenge 4 with the childcare costs analysis. While we had learned the technical skills of data manipulation and visualization in class, I extended my thinking by formulating my own research question about demographic patterns in childcare access. I connected technical data analysis with real-world social equity concerns, examining how the proportion of families of color related to childcare costs across different care types.
+
+I also extended my thinking in Lab 5 with the SQL murder mystery by developing systematic investigative workflows rather than just executing prescribed steps. I created logical deduction pathways through the data relationships and built complex multi-table investigation pipelines that went beyond basic join operations.
+
+**In what way?**
+
+In Challenge 4, I extended my thinking by integrating multiple technical skills into a cohesive research project. I used data pivoting from Lab 4, visualization techniques from Lab 2, and demographic analysis to create a comprehensive study that connected data patterns to broader social contexts. I calculated custom metrics like proportions of families of color and conducted comparative analyses across multiple dimensions simultaneously.
+
+In Lab 5, I extended my thinking by approaching the problem like a data detective rather than just a technical analyst. I developed systematic suspect identification processes, used string manipulation and date parsing in investigative workflows, and created logical reasoning chains that connected evidence across multiple data tables. This required me to think critically about data relationships and build complex query pipelines that went well beyond the basic join operations we practiced in class.
+
+Throughout the course, I consistently aimed for professional-quality outputs, paying attention to design elements, clear communication, and real-world applicability rather than just technical correctness.
 
 ## Peer Support & Collaboration
 
 <!-- Include an image or a description of feedback you gave that you are proud of (either in a peer review or in Discord). -->
 
+![](images/clipboard-905495166.png)
+
 <!-- Include a description of how you grew as a collaborator through the weekly pair programming activities.   -->
+
+The weekly pair programming activities transformed how I approach teamwork in data science. I really enjoyed the jewel heist activity since it perfectly demonstrated how collaboration creates better solutions than working alone.
+
+Through these sessions, I connected with more classmates and learned to work effectively under time pressure. I developed skills in clear communication, active listening, and adapting to different working styles. The experience taught me to balance confidence in my own ideas with openness to others' approaches.
+
+These activities shifted my perspective from seeing data science as individual work to understanding it as a collaborative field where diverse perspectives create stronger, more innovative outcomes.
