@@ -23,7 +23,7 @@ execute:
 ```{r}
 #| label: wd-1-csv-1
 
-# Lab 2 Q1
+# Lab 2 Q 1
 
 surveys <- read_csv(here::here("week2", "lab2", "surveys.csv"))
 ```
@@ -33,7 +33,7 @@ surveys <- read_csv(here::here("week2", "lab2", "surveys.csv"))
 ```{r}
 #| label: wd-1-csv-2
 
-# Challenge 3 
+# Challenge 3 Q 0
 
 teacher_evals <- read_csv(here("week3","lab3","teacher_evals.csv"))
 ```
@@ -53,7 +53,7 @@ teacher_evals <- read_csv(here("week3","lab3","teacher_evals.csv"))
 ```{r}
 #| label: wd-2-ex-1
 
-# Challenge 3 Q1 
+# Challenge 3 Q 1 
 
 teacher_evals_compare <- teacher_evals %>% 
   filter(question_no == '903') %>%
@@ -94,7 +94,7 @@ ca_childcare <- counties %>%
 ```{r}
 #| label: wd-2-ex-3
 
-# Challenge 4
+# Challenge 4 Filter Bay Area
 
 bay_area_long <- bay_area_childcare %>%
   pivot_longer(
@@ -288,7 +288,7 @@ ca_childcare <- ca_childcare %>%
 ```{r}
 #| label: wd-4-factor-ex-2
 
-# Lab 2 - Factor reordering
+# Lab 2 Q 16 (REVISED)
 surveys %>%
   mutate(species = fct_reorder(species, weight, .fun = median)) %>%
   ggplot(aes(x = species, y = weight)) +
@@ -300,8 +300,9 @@ surveys %>%
 ```{r}
 #| label: wd-4-string
 
-# Challenge 4
+# Challenge 4 - Filter Bay Area
 
+# Pivot proportions for plotting families of color vs white
 bay_area_long <- bay_area_long %>%
   mutate(
     age_group = case_when(
@@ -350,7 +351,7 @@ miranda_info <- person %>%
 ```{r}
 #| label: wd-5-right
 
-# Lab 5
+# Lab 5 - Miranda Priestly Investigation
 
 miranda_info <- person %>% 
   left_join(interview, by = c("id" = "person_id")) %>% 
@@ -436,7 +437,7 @@ ca_childcare <- counties %>%
 # I didn't use semi_join in my original work
 # REVISED example
 
-# Lab 4 
+# Lab 4 Q 2
 
 # I added a semi_join() example to filter counties dataset to only include rows that have matching childcare cost data, keeping just the counties columns. This is more efficient than an inner join when you only need data from the first table.
 
@@ -452,7 +453,7 @@ counties_with_childcare <- counties %>%
 # I didn't use anti_join() in my original work
 # REVISED example
 
-# Lab 4
+# Lab 4 Q 2
 
 # I added an anti_join() example to identify counties in the counties dataset that don't have matching records in the childcare costs data. This helps find missing data gaps in the dataset.
 
@@ -591,7 +592,7 @@ teacher_evals_compare <- teacher_evals %>%
 ```{r}
 #| label: r-2-3
 
-# Challenge 4
+# Challenge 4 - Filter Bay Area
 
 # Define Bay Area counties for analysis
 bay_area_counties <- c("Alameda","Contra Costa","Marin","San Francisco","San Mateo","Santa Clara","Solano","Napa")
