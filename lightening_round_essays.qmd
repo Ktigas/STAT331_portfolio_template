@@ -6,16 +6,22 @@ editor: visual
 
 **Answer each of the following questions with *one sentence* including a brief explanation.**
 
-1. Finish the sentence with another student’s name: "If [Name of Student] doesn’t earn an A, then nobody should, because..." Explain your choice and your reasoning.
+1.  Finish the sentence with another student’s name: "If \[Name of Student\] doesn’t earn an A, then nobody should, because..." Explain your choice and your reasoning.
 
+    If [Lucy]{.underline} doesn't earn an A, then nobody should, because she consistently contributes to class discussions, helps peers on Discord, and demonstrates deep understanding in her assignments.
 
-2. What was the most difficult part of the class for you? List a general topic, a specific problem, a kind of work we did, etc. and explain why.
+2.  What was the most difficult part of the class for you? List a general topic, a specific problem, a kind of work we did, etc. and explain why.
 
+    Using the {{ }} operator in data frame functions was most difficult because understanding when and how to properly use this advanced tidy evaluation syntax required significant practice and debugging. It took me a bit to understand data frames.
 
-3. What was the easiest part of the class for you? Explain why.
+3.  What was the easiest part of the class for you? Explain why.
 
+    Creating visualizations with ggplot2 was easiest because the grammar of graphics provides an intuitive, consistent framework that builds logically from data to plot elements.
 
-4. What part of the class surprised or interested you the most? Explain why.
+4.  What part of the class surprised or interested you the most? Explain why.
 
+    The power and flexibility of ggplot2 surprised me most, as I discovered how even simple adjustments to aesthetics and themes could transform basic plots into professional, publication-ready visualizations.
 
-5. Give one piece of advice to a student just beginning a quarter of STAT 331 that will help them be successful in learning.
+5.  Give one piece of advice to a student just beginning a quarter of STAT 331 that will help them be successful in learning.
+
+    Start practicing proper citation habits from day one and thoroughly complete every revision, as these skills build both technical proficiency and professional credibility throughout the course.
