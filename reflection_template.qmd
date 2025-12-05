@@ -645,11 +645,9 @@ bay_area_childcare_joined <- ca_childcare |>
   inner_join(bay_area_lookup, by = "county_name")
 
 # What I did: 
-# inner_join() keeps only rows where county_name exists in both
-# datasets. This achieves the same filtering as %in% but adds the advantage
-# of being able to include additional columns from the lookup table (like
-# region_type). inner_join is useful when your filter criteria comes from
-# another dataset or when you want to add info while filtering.
+# I used inner_join() to filter the childcare data to only Bay Area counties while also
+# adding region_type information from the lookup table. This demonstrates how inner_join()
+# can serve as both a filter and a way to add new columns from another dataset.
 ```
 
 -   `inner_join()` Example 2
