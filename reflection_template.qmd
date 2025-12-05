@@ -72,8 +72,11 @@ teacher_evals_compare <- teacher_evals |>
 
 
 # What I did:
-# I filtered a teacher evaluation dataset for specific questions and created new categorical variables. 
-# After these transformations, I used select() to keep only the three most relevant columns for analysis. This shows targeted column selection after complex data manipulation
+# After filtering and creating new categorical variables for set scores and seniority levels,
+# I used select() to extract only the three essential columns needed for my analysis:
+# course_id (unique identifier), set_level (excellent/standard classification), 
+# and sen_level (junior/senior/very senior grouping).
+# This demonstrates targeted column selection after complex data manipulation.
 ```
 
 -   Example removing specified columns
@@ -97,9 +100,10 @@ ca_childcare <- counties |>
   inner_join(childcare_costs, by = "county_fips_code")
 
 # What I did: 
-# I removed redundant columns when filtering for California counties to create cleaner datasets. 
-# Using select(-state_name) eliminated unnecessary information since all rows were from California. 
-# This demonstrates strategic column removal to streamline data.
+# When filtering for California counties, I recognized that the state_name column became redundant
+# since all rows would be "California". Using select(-state_name) removed this unnecessary column,
+# creating a cleaner dataset with only relevant information for my California-specific analysis.
+# This shows strategic column removal to streamline data and eliminate redundancy
 ```
 
 -   Example selecting columns based on logical values (e.g., `starts_with()`, `ends_with()`, `contains()`, `where()`)
@@ -169,7 +173,10 @@ income_comparison <- ca_childcare |>
 
 
 # What I did: 
-# I fixed two issues in the code. First, I added .groups = "drop" to remove the grouping structure after summarizing. Second, I used names_prefix to create clearer column names that show these are median income values for each year, making the table easier to understand.
+# I filtered the study year.
+# I fixed two issues in the code. 
+# First, I added .groups = "drop" to remove the grouping structure after summarizing. 
+# Second, I used names_prefix to create clearer column names that show these are median income values for each year, making the table easier to understand.
 ```
 
 -   Numeric Example 2
@@ -277,7 +284,7 @@ bay_area_long <- bay_area_childcare |>
 # ORIGINAL
 
 fish |>
-  filter(year >= 1990) |>  # Simple numeric filtering only
+  filter(year >= 1990) |> 
   mutate(
     season = if_else(year %% 2 == 0, "even_year", "odd_year")  
   ) |>
@@ -288,22 +295,25 @@ fish |>
 
 library(lubridate)
 
-fish_with_dates <- fish_data |>
+
+# Convert year to a date object 
+fish_with_dates <- fish |>
   mutate(
-    capture_date = ymd(capture_date),
-    is_summer = month(capture_date) %in% 6:8   
+    capture_date = make_date(year = year, month = 7, day = 1),  
+    decade       = floor_date(capture_date, unit = "10 years"), # group by decade
+    is_post1990  = year(capture_date) >= 1990                   # logical filter
+  )
 
-fish_summer_captures <- fish_with_dates |>
-  filter(
-    month(capture_date) >= 6,
-    month(capture_date) <= 8,
-    year(capture_date) >= 1990
-  ) |>
-  select(year, species, length, weight, capture_date, is_summer)
-
+# Filter for captures from 1990 onward
+fish_post1990 <- fish_with_dates |>
+  filter(is_post1990) |>
+  select(species, length, weight, year, capture_date, decade)
 
 # What I did:
-# I transformed simple numeric years into full date objects as the original code only filtered by numeric year values. The revision creates actual Date objects with make_date(), extracts components with month() and year(), and filters using these date functions. 
+# I converted the numeric year column into proper Date objects using make_date(), 
+# created derived date variables like decade, and filtered the dataset for captures from 1990 onward. 
+# This approach demonstrates filtering and grouping by dates instead of just numeric year values, 
+# making the dataset ready for more sophisticated temporal analysis.
 ```
 
 **WD-4: I can modify existing variables and create new variables in a dataframe for a *variety* of data types (e.g., numeric, integer, character, factor, date).**
@@ -324,6 +334,7 @@ teacher_evals_compare <- teacher_evals |>
                                 seniority > 8 ~ "very senior")) |> 
   select(course_id, set_level, sen_level)
 
+  
 # Comment in midterm rubric: multiple calls to mutate
 
 # REVISED 
@@ -501,8 +512,6 @@ ca_childcare <- ca_childcare |>
 ca_childcare <- counties |> 
   filter(state_abbreviation == "CA") |> 
   inner_join(childcare_costs, by = join_by(county_fips_code))
-
-ca_childcare
 
 # MODIFIED to include lubridate functions
 
@@ -1557,7 +1566,11 @@ summary_table <- bay_area_long |>
 
 # Lab 9 Question 3
 
+# Success comment: How could you use your table caption to convey additional information regarding the context of these data?
+
 # read this to help with kable styling https://cran.r-project.org/web/packages/kableExtra/vignettes/awesome_table_in_html.html#Column__Row_Specification
+
+library(kableExtra)
 
 surveys |>  
   map_chr(typeof) |>  
@@ -1568,9 +1581,23 @@ surveys |>
   kable_styling(bootstrap_options = "striped") |> 
   row_spec(0, bold = TRUE)
 
+# REVISION: 
+
+surveys |>  
+  map_chr(typeof) |>  
+  enframe(name = "Variable", value = "Data Type") |> 
+  arrange(`Data Type`, Variable) |>  
+  kable(caption = "Data Types in Portal Project Mammal Surveys\nLong-term ecological monitoring of rodent populations in Arizona desert (1977-2002)",
+        col.names = c("Variable", "Data Type"),
+        align = "ll") |>  
+  kable_styling(bootstrap_options = "striped",
+                full_width = FALSE,
+                position = "left") |> 
+  row_spec(0, bold = TRUE) 
+
 # What I did:
-# I used col.names in kable() to provide clearer, more descriptive column headers.
-# Renaming technical variable names to reader-friendly terms improved table interpretability.
+# I used col.names in kable() to provide clearer, more descriptive column headers
+# I added the Portal Project Mammal Surveys from Lab 2 based on the comment to provide context
 ```
 
 -   I can modify the text in my table to be more readable (e.g., bold face for column headers)
@@ -1590,6 +1617,7 @@ surveys |>
         col.names = c("Variable", "Data Type")) |>  
   kable_styling(bootstrap_options = "striped") |> 
   row_spec(0, bold = TRUE)
+
 
 # What I did: 
 # I applied bold formatting to column headers using row_spec() for visual emphasis. 
@@ -1613,7 +1641,7 @@ ca_childcare |>
 
 # What I did:
 # I arranged regions in descending order by 2018 median income to highlight patterns.
-# Logical ordering helps readers quickly identify high and low performing groups. 
+# Logical ordering helps readers quickly identify high and low performing groups.
 # This demonstrates thoughtful data presentation through sorting.
 ```
 
