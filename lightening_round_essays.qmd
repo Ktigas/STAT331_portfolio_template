@@ -1,5 +1,6 @@
 ---
 title: "Lightening Round Essays"
+author: "Kyrene Angelica Tigas"
 format: html
 editor: visual
 ---
@@ -8,7 +9,7 @@ editor: visual
 
 1.  Finish the sentence with another student’s name: "If \[Name of Student\] doesn’t earn an A, then nobody should, because..." Explain your choice and your reasoning.
 
-    If [Lucy]{.underline} doesn't earn an A, then nobody should, because she consistently contributes to class discussions, helps peers on Discord, and demonstrates deep understanding in her assignments.
+    If [Lucy]{.underline} doesn't earn an A, then nobody should, because she consistently contributes to class discussions, asks questions on Discord, and demonstrates deep understanding in her assignments.
 
 2.  What was the most difficult part of the class for you? List a general topic, a specific problem, a kind of work we did, etc. and explain why.
 

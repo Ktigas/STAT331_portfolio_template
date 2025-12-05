@@ -199,13 +199,32 @@ teacher_evals_compare <- teacher_evals |>
 ```{r}
 #| label: wd-3-character
 
-# Lab 4 Question 4 - Filtering Bay Area Counties 
+# Challenge 4 Filter Bay Area
 
 bay_area_counties <- c("Alameda","Contra Costa","Marin","San Francisco","San Mateo","Santa Clara","Solano","Napa")
 
-bay_area_childcare <- ca_childcare |>
+bay_area_childcare <- ca_childcare %>%
   filter(county_name %in% bay_area_counties)
 
+# Pivot data to long format for plotting
+bay_area_long <- bay_area_childcare %>%
+  pivot_longer(cols = c(mc_infant, mc_toddler, mc_preschool,
+                        mfcc_infant, mfcc_toddler, mfcc_preschool),
+               names_to = "type_age",
+               values_to = "median_price") %>%
+  mutate(
+    age_group = case_when(
+      str_detect(type_age, "infant") ~ "Infant",
+      str_detect(type_age, "toddler") ~ "Toddler",
+      str_detect(type_age, "preschool") ~ "Preschool"
+    ),
+    childcare_type = case_when(
+      str_detect(type_age, "^mc_") ~ "Center-Based",
+      str_detect(type_age, "^mfcc_") ~ "Family-Based"
+    ),
+    pct_families_of_color = 1 - (one_race_w / households),
+    pct_white_families = one_race_w / households
+  )
 
 # What I did:
 # I filtered California counties to include only those in the Bay Area region. 
@@ -218,7 +237,7 @@ bay_area_childcare <- ca_childcare |>
 ```{r}
 #| label: wd-3-string
 
-# Challenge 4 - Using str_detect to filter the ages 
+# Challenge 4 Filter Bay Area
 
 bay_area_long <- bay_area_childcare |>
   pivot_longer(cols = c(mc_infant, mc_toddler, mc_preschool,
@@ -269,24 +288,16 @@ fish |>
 
 library(lubridate)
 
-fish_with_dates <- fish |>
+fish_with_dates <- fish_data |>
   mutate(
-    # create actual date objects from year column
-    capture_date = make_date(year = year, month = 6, day = 15),  
-    
-    # extract date components 
-    capture_month = month(capture_date),
-    capture_year = year(capture_date),
-    days_in_year = yday(capture_date)
-    )
-  
+    capture_date = ymd(capture_date),
+    is_summer = month(capture_date) %in% 6:8   
 
-# filter using lubridate functions
 fish_summer_captures <- fish_with_dates |>
   filter(
-    month(capture_date) >= 6,            
+    month(capture_date) >= 6,
     month(capture_date) <= 8,
-    year(capture_date) >= 1990          
+    year(capture_date) >= 1990
   ) |>
   select(year, species, length, weight, capture_date, is_summer)
 
@@ -358,7 +369,8 @@ fish <- fish |>
 
 # Growing comment: You should only call the mutate() function once!
 
-# ORIGINAL 
+# ORIGINAL
+
 ca_childcare <- ca_childcare |> 
   mutate(county_name = str_remove(county_name, " County")) |> 
   mutate(region = fct_collapse(county_name,
@@ -370,6 +382,7 @@ ca_childcare <- ca_childcare |>
     
 
 # REVISED
+
 ca_childcare <- ca_childcare |> 
   mutate(
     county_name = str_remove(county_name, " County"),
@@ -513,9 +526,9 @@ ca_childcare_dates
 
 
 # What I did:
-# I created multiple date variables including fiscal year calculations using lubridate functions. 
-# This transformation converted simple numeric years into rich temporal data with decade groupings. 
-# The approach shows sophisticated date manipulation for time series analysis.
+# I used lubridate functions to transform the numeric study_year into date variables, including study_date, decade groupings, and fiscal year start/end dates. 
+# I also calculated the length of each fiscal year in days. 
+# This shows how to modify existing variables and create new ones of the date type, demonstrating sophisticated date manipulation
 ```
 
 **WD-5: I can use mutating joins to combine multiple dataframes.**
@@ -524,6 +537,8 @@ ca_childcare_dates
 
 ```{r}
 #| label: wd-5-left-ex-1
+
+# Left join keeps all rows from the left table and matches from the right
 
 # Lab 4 Question 3
 
@@ -543,6 +558,8 @@ ca_childcare <- ca_childcare |>
 
 ```{r}
 #| label: wd-5-right
+
+# right join keeps all rows from the right and matches from the left
 
 # Lab 4 Question 3 
 
@@ -565,7 +582,6 @@ tax_rev |>
 
 ```{r}
 #| label: wd-5-left-right-ex-2
-
 
 # Lab 7 Question 3
 
@@ -593,16 +609,20 @@ enriched_fish <- fish |>
   left_join(area_summary, by = c("year", "section"))
 
 
-
-# What I did: 
-# I created summary statistics for data quality issues and joined them back to the original dataset. 
-# This enriched the fish data with missing value metrics for each sampling area. 
+# What I did:
+# I calculated summary statistics for missing weights by year and section, 
+# then used a left join to add these metrics back to the original fish dataset. 
+# This enriched the dataset with area-level data quality information, 
+# demonstrating how to combine multiple dataframes using mutating joins.
 ```
 
 -   `inner_join()` Example 1
 
 ```{r}
 #| label: wd-5-inner-ex-1 
+
+
+# inner join keeps only rows that match in both tables
 
 # Challenge 4 - Bay Area Analysis
 
@@ -637,6 +657,8 @@ bay_area_childcare_joined <- ca_childcare |>
 ```{r}
 #| label: wd-5-inner-ex-2
 
+# inner join keeps only rows that match in both tables
+
 # Lab 4 Question 2
 
 # Success Comment: Nice work filtering first! Technically, you don't need to use join_by() if both datasets have the same column names. You can simply use by = "county_fips_code".
@@ -661,6 +683,8 @@ ca_childcare <- counties |>
 ```{r}
 #| label: wd-6-semi
 
+# semi join keeps rows from the left that have a match in the right but doesn’t add columns from the right.
+
 # Lab 7 Question 3
 
 fish_missing <- fish |>
@@ -682,9 +706,10 @@ problem_area_fish <- fish |>
   semi_join(problem_areas, by = c("year", "section"))
 
 
-
 # What I did:
-# semi_join() is used to filter the fish dataset to only include rows that match specific year and section combinations with missing weight values. Instead of adding new columns, the join acts purely as a filtering tool, allowing me to isolate only the fish records that come from problem areas with missing data.
+# semi_join() is used to filter the fish dataset to only include rows that match specific year and section combinations with missing weight values. 
+# Instead of adding new columns, the join acts purely as a filtering tool, 
+# allowing me to isolate only the fish records that come from problem areas with missing data.
 ```
 
 -   `anti_join()`
@@ -1003,6 +1028,8 @@ ggplot(data = surveys,
 
 # Lab 10 Question 3 
 
+# Success comment: Nice work adding the total babies and the number of simulations to the plot title!
+
 enframe(results, value = "correct_babies") |>
   count(correct_babies) |>
   mutate(proportion = n / sum(n)) |>
@@ -1275,8 +1302,6 @@ ggplot(data = ca_childcare_long,
 
 **DVS-3: I show creativity in my visualizations**
 
-Midterm comment: Need a color package!
-
 -   I can use non-standard colors (Example 1)
 
 ```{r}
@@ -1373,6 +1398,9 @@ ggplot(data = surveys,
   ) +
   theme(plot.subtitle = element_markdown(size = 12))
 
+
+
+# The geom_text() modification works by adding annotations directly onto the plot to highlight specific values, in this case the median weights for each species. It uses a separate dataset (survey_medians) and maps x, y, and label independently with inherit.aes = FALSE, so it doesn’t interfere with the main plot’s aesthetics. The other parameters control the placement and appearance of the text. This satisfies the requirement by showing creative use of annotations to make the plot more informative.
 ```
 
 -   I can choose creative geometries (e.g., `geom_segment()`, `geom_ribbon)()`)
@@ -1455,7 +1483,8 @@ ca_childcare |>
 ```{r}
 #| label: dvs-4-across
 
-# Lab 7 Question 3
+# Lab 7 Question 3 - summarizing the number of missing fishes
+
 missing <- fish %>%
   summarise(
     rows_with_any_NA = sum(if_any(everything(), is.na)),
@@ -1517,7 +1546,7 @@ summary_table <- bay_area_long |>
 
 # What I did:
 # I created a comprehensive summary table of childcare costs across age groups and provider types. 
-# Multiple summary statistics provided a complete picture of cost distributions. 
+# Multiple summary statistics provided a complete picture of cost distributions
 # This shows multi-dimensional group summarization.
 ```
 
@@ -1598,6 +1627,8 @@ ca_childcare |>
 #| label: dvs-7-ex-1
 
 # Lab 9 Question 8 - Color coding missing values
+
+library(gt)
 
 # used this for tab_header() https://gt.rstudio.com/reference/tab_header.html
 fish |> 
@@ -1851,6 +1882,9 @@ evals_new <- evals |>
   bind_cols()  
 
 # MODIFIED - use across() instead of map_if()
+
+# where() from https://r4ds.hadley.nz/iteration.html#sec-across
+
 evals_new <- evals |>  
   mutate(across(
     .cols = where(is.character),  # Select only character columns
@@ -1858,9 +1892,9 @@ evals_new <- evals |>
   ))
 
 # What I did:
-# Modified the original map_if() approach to use across() with where().
-# across() is more readable and integrates better with dplyr pipelines.
-# This demonstrates using iteration (across()) to avoid repetitive mutate() calls.
+# I replaced the original map_if() approach with mutate(across()) to convert all character columns to factors.
+# Using across() with where(is.character) makes the code more readable and integrates smoothly with the dplyr pipeline. 
+# This demonstrates iteration to apply a function to multiple columns at once, reducing repetitive code. 
 ```
 
 -   using a `map()` function with **one** input (e.g., `map()`, `map_chr()`, `map_dbl()`, etc.) - MUST BE UNIQUE EXAMPLE
@@ -2062,7 +2096,7 @@ Revisions taught me that good code balances correctness with clarity and adaptab
 
 **How have you incorporated this knowledge into future assignments?**
 
-After learning from revisions, I applied these lessons proactively across multiple labs and challenges. In **Lab 8** on data frame functions, I designed `style_plot()` with built-in error handling and clear parameter documentation, anticipating potential issues before they occurred. For **Lab 9** on exploratory data analysis, I consistently used `across()` with proper column selection and added `.groups = "drop"` to all summary operations. In **Challenge 4**, I implemented the feedback about combining `mutate()` calls immediately, creating cleaner pipelines for the childcare cost analysis. I also began citing resources like the R4DS textbook and official package documentation directly in my code comments, making my methods transparent and reproducible. This systematic application of revision lessons transformed how I approached coding tasks, moving from reactive corrections to proactive best practices implementation.
+After learning from revisions, I applied these lessons proactively across multiple labs and challenges. In **Lab 8** on data frame functions, I designed `style_plot()` with built-in error handling and clear parameter documentation, anticipating potential issues before they occurred. For **Lab 9** on exploratory data analysis, I consistently used `across()` with proper column selection to all summary operations. In **Challenge 4**, I implemented the feedback about combining `mutate()` calls immediately, creating cleaner pipelines for the childcare cost analysis. I also began citing resources like the R4DS textbook and official package documentation directly in my code comments, making my methods transparent and reproducible. This systematic application of revision lessons transformed how I approached coding tasks, moving from reactive corrections to proactive best practices implementation.
 
 ## Extending My Thinking
 
