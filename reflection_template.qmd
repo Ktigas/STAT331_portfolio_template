@@ -173,7 +173,7 @@ income_comparison <- ca_childcare |>
 
 
 # What I did: 
-# I filtered the study year.
+# I filtered for study years 2008 and 2018 using %in% c(2008, 2018)
 # I fixed two issues in the code. 
 # First, I added .groups = "drop" to remove the grouping structure after summarizing. 
 # Second, I used names_prefix to create clearer column names that show these are median income values for each year, making the table easier to understand.
@@ -210,28 +210,8 @@ teacher_evals_compare <- teacher_evals |>
 
 bay_area_counties <- c("Alameda","Contra Costa","Marin","San Francisco","San Mateo","Santa Clara","Solano","Napa")
 
-bay_area_childcare <- ca_childcare %>%
+bay_area_childcare <- ca_childcare |>
   filter(county_name %in% bay_area_counties)
-
-# Pivot data to long format for plotting
-bay_area_long <- bay_area_childcare %>%
-  pivot_longer(cols = c(mc_infant, mc_toddler, mc_preschool,
-                        mfcc_infant, mfcc_toddler, mfcc_preschool),
-               names_to = "type_age",
-               values_to = "median_price") %>%
-  mutate(
-    age_group = case_when(
-      str_detect(type_age, "infant") ~ "Infant",
-      str_detect(type_age, "toddler") ~ "Toddler",
-      str_detect(type_age, "preschool") ~ "Preschool"
-    ),
-    childcare_type = case_when(
-      str_detect(type_age, "^mc_") ~ "Center-Based",
-      str_detect(type_age, "^mfcc_") ~ "Family-Based"
-    ),
-    pct_families_of_color = 1 - (one_race_w / households),
-    pct_white_families = one_race_w / households
-  )
 
 # What I did:
 # I filtered California counties to include only those in the Bay Area region. 
@@ -310,10 +290,11 @@ fish_post1990 <- fish_with_dates |>
   select(species, length, weight, year, capture_date, decade)
 
 # What I did:
-# I converted the numeric year column into proper Date objects using make_date(), 
-# created derived date variables like decade, and filtered the dataset for captures from 1990 onward. 
-# This approach demonstrates filtering and grouping by dates instead of just numeric year values, 
-# making the dataset ready for more sophisticated temporal analysis.
+# I demonstrated lubridate functions by creating placeholder date objects from the numeric year column.
+# Using make_date(year = year, month = 7, day = 1) created July 1 dates for each year,
+# which allowed me to use date functions like floor_date() to group by decade and year() to filter.
+# While the original dataset only had year information, this approach shows how to work with
+# date objects when temporal analysis requires actual Date types.
 ```
 
 **WD-4: I can modify existing variables and create new variables in a dataframe for a *variety* of data types (e.g., numeric, integer, character, factor, date).**
@@ -584,7 +565,13 @@ tax_rev |>
   right_join(ca_childcare, by = c("entity_name" = "county_name", "year" = "study_year"))
 
 # What I did: 
-# I used a right join starting with tax revenue data and joining childcare costs. This keeps all tax records while matching childcare information.
+# I used right_join() starting with tax revenue data and joining childcare costs from the right.
+# This keeps all rows from ca_childcare (the right table) while adding matching tax information 
+# from tax_rev (the left table). This is functionally equivalent to the original left_join() but 
+# demonstrates understanding that left_join(A, B) produces the same result as right_join(B, A).
+# Right joins are useful when you want to maintain all records from a dataset that appears later
+# in your analytical pipeline or when the logical flow of your analysis makes more sense starting
+# from a different table.
 ```
 
 -   `left_join()` **or** `right_join()` Example 2
@@ -644,6 +631,9 @@ bay_area_childcare <- ca_childcare |>
 
 
 # MODIFIED to use inner_join() instead: 
+
+# https://r4ds.hadley.nz/joins.html#how-do-joins-work
+
 bay_area_lookup <- tibble(
   county_name = c("Alameda", "Contra Costa", "Marin", "San Francisco",
                   "San Mateo", "Santa Clara", "Solano", "Napa"),
@@ -827,8 +817,6 @@ income_comparison <- ca_childcare |>
     names_prefix = "median_income_"
   ) |>
   arrange(desc(median_income_2018))
-
-
 
 ```
 
@@ -1153,7 +1141,6 @@ ggplot(data = ca_childcare_long,
     axis.text.x = element_text(hjust = 0.5, size = 12),  # horizontal labels
     axis.text.y = element_text(size = 12),
     axis.title = element_text(size = 14),
-    strip.text = element_text(size = 12),
     legend.title = element_text(size = 12),
     legend.text = element_text(size = 10)
   )
@@ -1211,21 +1198,28 @@ ggplot(data = surveys,
       geom_boxplot(outlier.shape = NA) +
       scale_fill_viridis_d()
 
-# MODIFIED
+# MODIFIED to be colorblind-friendly
+
+# https://r4ds.hadley.nz/factors.html#sec-ordered-factors
 
 ggplot(surveys, aes(x = weight, y = species, fill = sex)) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_jitter(alpha = 0.6, width = 0.2) +
-  scale_fill_viridis_d() +
-  labs(title = "Weight by Species and Sex",
-       x = "Weight",
+  geom_boxplot(outlier.shape = NA, alpha = 0.8) +
+  geom_jitter(aes(color = sex), alpha = 0.4, width = 0.2) +
+  scale_fill_viridis_d(option = "plasma", end = 0.8) +
+  scale_color_viridis_d(option = "plasma", end = 0.8) +
+  labs(title = "Weight Distribution by Species and Sex",
+       x = "Weight (grams)",
        y = "Species",
-       fill = "Sex") +
+       fill = "Sex",
+       color = "Sex") +
   theme_minimal()
 
 # What I did:
-# Made this plot color-blind friendly using the viridis palette. 
-# Light blue points overlaid on filled boxplots may not have enough contrast for all viewers, especially if the boxplots have similar colors.
+# I made this plot colorblind-friendly by applying the viridis color palette to both the boxplot fills
+# and the jittered points. The viridis palette is specifically designed to be perceptually uniform and
+# accessible to people with various forms of color vision deficiency. By using scale_fill_viridis_d() 
+# and scale_color_viridis_d() with matching options, I ensured the points and boxes have consistent,
+# distinguishable colors that maintain contrast even for colorblind viewers.
 ```
 
 -   I can modify my plot titles to clearly communicate the data context
@@ -1417,6 +1411,8 @@ ggplot(data = surveys,
 
 # Lab 4 Question 7
 
+# fct_reorder2 from https://r4ds.hadley.nz/factors.html#sec-modifying-factor-order
+
 ggplot(data = ca_childcare_long,
        aes(x = study_year, y = median_price, 
            color = fct_reorder2(region, study_year, median_price))) +
@@ -1435,7 +1431,8 @@ ca_segments <- ca_childcare_long |>
   group_by(region, age_group) |>
   summarise(
     start_price = median_price[study_year == 2008],
-    end_price = median_price[study_year == 2018]
+    end_price = median_price[study_year == 2018],
+    .groups = "drop"
   )
 
 ggplot(
@@ -1459,7 +1456,6 @@ ggplot(
     ),
     linewidth = 1
   )
-)
 
   
 # What I did: 
@@ -1492,7 +1488,7 @@ ca_childcare |>
 
 # Lab 7 Question 3 - summarizing the number of missing fishes
 
-missing <- fish %>%
+missing <- fish |>
   summarise(
     rows_with_any_NA = sum(if_any(everything(), is.na)),
     across(everything(), ~sum(is.na(.)), .names = "missing_{.col}")
@@ -2100,7 +2096,7 @@ chisq.test(teacher_evals_compare$set_level, teacher_evals_compare$sen_level)
 ```{r}
 #| label: dsm-2-3
 
-# Lab 4 Question 9 - Linear regression
+# Lab 4 Question 9
 
 reg_mod1 <- lm(mc_infant ~ mhi_2018, ca_childcare)
 summary(reg_mod1)
